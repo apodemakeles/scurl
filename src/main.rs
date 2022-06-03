@@ -1,4 +1,7 @@
-use clap:: { Subcommand, Parser, Args};
+use std::str::FromStr;
+use std::string::ParseError;
+use clap:: {Subcommand, Parser};
+use reqwest::Url;
 
 /// a super curl
 #[derive(Parser, Debug)]
@@ -16,7 +19,14 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct GetCmd{
-    url: String,
+    #[clap(parse(try_from_str = parse_to_url))]
+    url: Url,
+}
+
+fn parse_to_url(s: &str) -> Result<Url, String> {
+    Url::from_str(s).map_err(|_| {
+        format!("{} is not a legal url ", s)
+    })
 }
 
 fn main() {
