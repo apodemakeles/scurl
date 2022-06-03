@@ -1,7 +1,8 @@
 use std::str::FromStr;
 use std::string::ParseError;
 use clap:: {Subcommand, Parser};
-use reqwest::Url;
+use reqwest::{Client, Url};
+use anyhow::Result;
 
 /// a super curl
 #[derive(Parser, Debug)]
@@ -29,7 +30,22 @@ fn parse_to_url(s: &str) -> Result<Url, String> {
     })
 }
 
-fn main() {
+#[tokio::main]
+async fn main()-> Result<()> {
     let opts: Opts = Opts::parse();
-    println!("{:?}", opts)
+    println!("{:?}", opts);
+
+    let result = match opts.subcmd {
+        SubCommand::Get(ref cmd) => execute_get(cmd, &opts).await?,
+    };
+
+    Ok(result)
+}
+
+async fn execute_get(cmd: &GetCmd, opts: &Opts) -> Result<()>{
+    let client = Client::new();
+    let resp = client.get(&cmd.url.to_string()).send().await?;
+    println!("{:?}", resp.text().await?);
+
+    Ok(())
 }
